@@ -5,7 +5,7 @@ Created on Sun Jul 17 12:55:27 2022
 @author: willm
 """
 from pixpy import SnapshotSchedule
-import config
+from pixpy import config
 from datetime import timedelta, datetime as dt
 from time import sleep
 from dataclasses import dataclass

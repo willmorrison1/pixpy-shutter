@@ -6,7 +6,7 @@ setup(
     author='Will Morrison',
     author_email='willmorrison661@gmail.com',
     packages=[
-        'pixpy',
+        'pixpy_shutter',
     ],
     install_requires=[
         'gpiozero',

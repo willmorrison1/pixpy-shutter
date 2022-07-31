@@ -28,7 +28,7 @@ class ShutterParameters:
     
     
 @dataclass()
-class ExternalShutter(ShutterParameters):
+class ExternalShutter:
     servo: Servo
     _opened: int = 0
     _closed: int = 0

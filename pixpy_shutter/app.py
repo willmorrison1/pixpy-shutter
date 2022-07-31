@@ -49,12 +49,12 @@ class ExternalShutter(ShutterParameters):
 def read_shutter_parameters(shutter_parameters_file):
     tree = ET.parse(shutter_parameters_file)
     params_dict = {
-        'servo_move_time': float(tree.getroot().find('servo_move_time').text),
-        'grace_time': float(tree.getroot().find('grace_time').text),
-        'servo_pin': float(tree.getroot().find('servo_pin').text),
-        'min_pulse_width': tree.getroot().find('min_pulse_width').text,
-        'max_pulse_width': tree.getroot().find('max_pulse_width').text,
-        'frame_width': tree.getroot().find('frame_width').text,
+        'servo_move_time': timedelta(seconds=float(tree.getroot().find('servo_move_time').text)),
+        'grace_time': timedelta(seconds=float(tree.getroot().find('grace_time').text)),
+        'servo_pin': int(tree.getroot().find('servo_pin').text),
+        'min_pulse_width': float(tree.getroot().find('min_pulse_width').text),
+        'max_pulse_width': float(tree.getroot().find('max_pulse_width').text),
+        'frame_width': float(tree.getroot().find('frame_width').text),
         }
     return ShutterParameters(**params_dict)
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<shutter_config>
+	<servo_move_time description="The time it takes for the servo to move (s)">1</servo_move_time>
+	<grace_time description="Extra delays to give the schedule, to account for any inconsistencies in time syncing (s)">1</grace_time>
+	<servo_pin description="The servo GPIO pin">18</servo_pin>
+	<min_pulse_width description="GPIO servo minimum pulse width * 1000">0.553</min_pulse_width>
+	<max_pulse_width description="GPIO servo maximum pulse width * 1000">2.45</max_pulse_width>
+	<frame_width description="GPIO servo frame width * 1000">20</frame_width>
+</shutter_config>
+
+    

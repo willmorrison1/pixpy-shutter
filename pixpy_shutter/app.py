@@ -12,9 +12,23 @@ from dataclasses import dataclass
 from argparse import ArgumentParser
 from gpiozero import Servo
 from gpiozero.pins.pigpio import PiGPIOFactory
+import xml.etree.cElementTree as ET
 
 @dataclass()
-class ExternalShutter:
+class ShutterParameters:
+    servo_move_time: timedelta
+    grace_time: timedelta
+    servo_pin: int
+    min_pulse_width: float
+    max_pulse_width: float
+    frame_width: float
+    def __post_init__(self):
+        if self.min_pulse_width > self.max_pulse_width:
+            raise ValueError("min-max pulse width error")
+    
+    
+@dataclass()
+class ExternalShutter(ShutterParameters):
     servo: Servo
     _opened: int = 0
     _closed: int = 0
@@ -30,24 +44,24 @@ class ExternalShutter:
         self._closed = self._closed + 1
         self._last_trigger_time = dt.utcnow()
     
+
+
+def read_shutter_parameters(shutter_parameters_file):
+    tree = ET.parse(shutter_parameters_file)
+    params_dict = {
+        'servo_move_time': float(tree.getroot().find('servo_move_time').text),
+        'grace_time': float(tree.getroot().find('grace_time').text),
+        'servo_pin': float(tree.getroot().find('servo_pin').text),
+        'min_pulse_width': tree.getroot().find('min_pulse_width').text,
+        'max_pulse_width': tree.getroot().find('max_pulse_width').text,
+        'frame_width': tree.getroot().find('frame_width').text,
+        }
+    return ShutterParameters(**params_dict)
+
     
 def app_config():
     parser = ArgumentParser()
 
-    parser.add_argument(
-        '--servo_move_time',
-        type=float,
-        help='The time it takes for the servo to move (s).',
-        required=False,
-        default=1,
-    )
-    parser.add_argument(
-        '--grace_time',
-        type=float,
-        help='Extra delays to give the schedule, to account for any inconsistencies in time syncing',
-        required=False,
-        default=1,
-    )
     parser.add_argument(
         '--schedule_config_file',
         type=str,
@@ -55,36 +69,19 @@ def app_config():
         default="schedule_config.xml",
     )
     parser.add_argument(
-        '--servo_pin',
-        type=int,
-        help='The servo GPIO pin',
-        default=18,
-    )
-    parser.add_argument(
-        '--min_pulse_width',
-        type=float,
-        help='gpio servo minimum pulse width * 1000',
-        default=0.553,
-    )
-    parser.add_argument(
-        '--max_pulse_width',
-        type=float,
-        help='gpio servo maximum pulse width * 1000',
-        default=2.45,
-    )
-    parser.add_argument(
-        '--frame_width',
-        type=float,
-        help='gpio servo frame width * 1000',
-        default=20,
+        '--shutter_config_file',
+        type=str,
+        help='The eternal servo shutter configuration file (.xml)',
+        default="schedule_config.xml",
     )
     args = parser.parse_args()
+    shutter_params = read_shutter_parameters(args.shutter_config_file)
     factory = PiGPIOFactory()
-    servo = Servo(args.servo_pin, pin_factory=factory,
-                  min_pulse_width=args.min_pulse_width / 1000,
-                  max_pulse_width=args.max_pulse_width / 1000,
-                  frame_width=args.frame_width / 1000)
-    external_shutter = ExternalShutter(servo)
+    servo = Servo(shutter_params.servo_pin, pin_factory=factory,
+                  min_pulse_width=shutter_params.min_pulse_width / 1000,
+                  max_pulse_width=shutter_params.max_pulse_width / 1000,
+                  frame_width=shutter_params.frame_width / 1000)
+    external_shutter = ExternalShutter(servo, **shutter_params)# could improve inheritance..
 
     return args, external_shutter
 

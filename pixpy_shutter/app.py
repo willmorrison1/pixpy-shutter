@@ -15,7 +15,10 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 import xml.etree.cElementTree as ET
 
 @dataclass()
-class ShutterParameters:
+class ExternalShutterParameters:
+    '''External shutter parameters linked to EternalShutter but not yet
+    inherited (todo).
+    '''
     servo_move_time: timedelta
     grace_time: timedelta
     servo_pin: int
@@ -29,6 +32,9 @@ class ShutterParameters:
     
 @dataclass()
 class ExternalShutter:
+    '''
+    Handles the external shutter opening and closing actions 
+    '''
     servo: Servo
     _opened: int = 0
     _closed: int = 0
@@ -55,7 +61,7 @@ def read_shutter_parameters(shutter_parameters_file):
         'max_pulse_width': float(tree.getroot().find('max_pulse_width').text),
         'frame_width': float(tree.getroot().find('frame_width').text),
         }
-    return ShutterParameters(**params_dict)
+    return ExternalShutterParameters(**params_dict)
 
     
 def app_config():

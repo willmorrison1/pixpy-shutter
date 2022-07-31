@@ -14,21 +14,10 @@ from gpiozero import Servo
 from gpiozero.pins.pigpio import PiGPIOFactory
 import xml.etree.cElementTree as ET
 
-@dataclass()
-class ShutterParameters:
-    servo_move_time: timedelta
-    grace_time: timedelta
-    servo_pin: int
-    min_pulse_width: float
-    max_pulse_width: float
-    frame_width: float
-    def __post_init__(self):
-        if self.min_pulse_width > self.max_pulse_width:
-            raise ValueError("min-max pulse width error")
-    
+ 
     
 @dataclass()
-class ExternalShutter(ShutterParameters):
+class ExternalShutter:
     servo: Servo
     _opened: int = 0
     _closed: int = 0
@@ -56,7 +45,7 @@ def read_shutter_parameters(shutter_parameters_file):
         'max_pulse_width': float(tree.getroot().find('max_pulse_width').text),
         'frame_width': float(tree.getroot().find('frame_width').text),
         }
-    return ShutterParameters(**params_dict)
+    return ShutterSnapshotSchedule(**params_dict)
 
     
 def app_config():
@@ -81,24 +70,28 @@ def app_config():
                   min_pulse_width=shutter_params.min_pulse_width / 1000,
                   max_pulse_width=shutter_params.max_pulse_width / 1000,
                   frame_width=shutter_params.frame_width / 1000)
-    external_shutter = ExternalShutter(servo, **shutter_params)# could improve inheritance..
+    external_shutter = ExternalShutter(servo, **shutter_params.__dict__)# could improve inheritance..
 
     return args, external_shutter
 
 
 @dataclass(frozen=True)  # todo: docstr
 class ShutterSnapshotSchedule(SnapshotSchedule):
-    servo_move_time: timedelta = timedelta(seconds=1)
-    grace_time: timedelta = timedelta(seconds=1)
-
-    def total_grace_time(self):
-        return self.servo_move_time + self.grace_time
-
+    servo_move_time: timedelta
+    grace_time: timedelta
+    servo_pin: int
+    min_pulse_width: float
+    max_pulse_width: float
+    frame_width: float
     def __post_init__(self):
+        if self.min_pulse_width > self.max_pulse_width:
+            raise ValueError("min-max pulse width error")
         if (self.total_grace_time() * 2) >= self.sample_repetition:
             raise ValueError(
                 'Servo takes longer to move than the sample repetition. \
-                    Slow the sample repetition or reduce the servo grace time')
+                    Slow the sample repetition or reduce the servo grace time')            
+    def total_grace_time(self):
+        return self.servo_move_time + self.grace_time
 
 
 def activate_shutter(ssched, external_shutter):
